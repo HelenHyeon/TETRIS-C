@@ -217,11 +217,11 @@ enum {
 #define EMPTY 0 // 블록이 이동할 수 없는 공간은 양수로 표현 
 #define WALL 1 //벽
 #define INACTIVE_BLOCK 2 // 이동완료 블록
-#define MAIN_X_SIZE 13 // 가로크기 (벽2 포함)
-#define MAIN_Y_SIZE 21 // 세로크기 (벽1 포함)
+#define XSIZE 13 // 가로크기 (벽2 포함)
+#define YSIZE 21 // 세로크기 (벽1 포함)
 #define MAIN_X_ADJ 1 // 게임판 왼쪽 공백
 #define MAIN_Y_ADJ 1 // 게임판 위쪽 공백
-#define STATUS_X_ADJ MAIN_X_ADJ + MAIN_X_SIZE + 1 //우측 게임정보 = 게임판 왼쪽 공백 + 게임판 사이즈 + 1
+#define STATUS_X_ADJ MAIN_X_ADJ + XSIZE + 1 //우측 게임정보 = 게임판 왼쪽 공백 + 게임판 사이즈 + 1
 };
 
 int STATUS_Y_GOAL; //GOAL 정보표시위치Y 좌표 저장
@@ -263,8 +263,8 @@ int rotation; //블록 회전값 저장
 int next_type; //다음 블록값 저장
 int keep_type; //킵한 블록값 저장
 
-int main_org[MAIN_Y_SIZE][MAIN_X_SIZE]; // 게임판 정보 저장 후 main_cpy로 복사 
-int main_cpy[MAIN_Y_SIZE][MAIN_X_SIZE]; // main_cpy와 배열을 비교해서 달라진 곳 수정
+int main_org[YSIZE][XSIZE]; // 게임판 정보 저장 후 main_cpy로 복사 
+int main_cpy[YSIZE][XSIZE]; // main_cpy와 배열을 비교해서 달라진 곳 수정
 int bx, by; // 블록 좌표
 int key; // 키값 저장 
 int speed = 10; //게임진행속도 
@@ -274,7 +274,7 @@ int last_score = 0; //마지막게임점수
 int best_score = 0; //최고게임점수
 int keep_max;
 
-int new_block_on = 0; // new block 필요 여부
+int new_block_type = 0; // new block 필요 여부
 int crush_on = 0; // 이동 블록의 충돌 여부
 int space_key_on = 0; // hard drop 상태
 
@@ -325,7 +325,7 @@ int main() {
         }
         drop_block(); // 블록을 한칸 내림 
         check_game_over(); //게임오버를 체크 
-        if (new_block_on == 1) {
+        if (new_block_type == 1) {
             new_block();
             keep_max = 0; // 킵 한 블록을 바꿀수 있는지 여부 초기화
         }
@@ -357,29 +357,29 @@ void reset() {
 void reset_main() { // 게임판을 그림 
     int i, j;
 
-    for (i = 0; i < MAIN_Y_SIZE; i++) { // 게임판을 0으로 초기화  
-        for (j = 0; j < MAIN_X_SIZE; j++) {
+    for (i = 0; i < YSIZE; i++) { // 게임판을 0으로 초기화  
+        for (j = 0; j < XSIZE; j++) {
             main_org[i][j] = 0;
             main_cpy[i][j] = 100; // 게임판에 사용되지 않는 수
         }
     }
-    for (j = 1; j < MAIN_X_SIZE; j++) { //y값이 3인 위치에 천장을 만듦 
+    for (j = 1; j < XSIZE; j++) { //y값이 3인 위치에 천장을 만듦 
         main_org[3][j] = CEILLING;
     }
-    for (i = 1; i < MAIN_Y_SIZE - 1; i++) { //좌우 벽을 만듦   
+    for (i = 1; i < YSIZE - 1; i++) { //좌우 벽을 만듦   
         main_org[i][0] = WALL;
-        main_org[i][MAIN_X_SIZE - 1] = WALL;
+        main_org[i][XSIZE - 1] = WALL;
     }
-    for (j = 0; j < MAIN_X_SIZE; j++) { //바닥벽을 만듦 
-        main_org[MAIN_Y_SIZE - 1][j] = WALL;
+    for (j = 0; j < XSIZE; j++) { //바닥벽을 만듦 
+        main_org[YSIZE - 1][j] = WALL;
     }
 }
 
 void reset_main_cpy() { // main_cpy를 초기화 
     int i, j;
 
-    for (i = 0; i < MAIN_Y_SIZE; i++) { 
-        for (j = 0; j < MAIN_X_SIZE; j++) {
+    for (i = 0; i < YSIZE; i++) { 
+        for (j = 0; j < XSIZE; j++) {
             main_cpy[i][j] = 100; // 게임판에 사용되지 않는 수
         }
     }
@@ -411,11 +411,11 @@ void draw_map() { // 게임 상태 표시
 void draw_main() { // 게임판 그리는 함수 
     int i, j;
 
-    for (j = 1; j < MAIN_X_SIZE - 1; j++) { //천장은 계속 새로운블럭이 지나가서 지워지면 새로 그려줌 
+    for (j = 1; j < XSIZE - 1; j++) { //천장은 계속 새로운블럭이 지나가서 지워지면 새로 그려줌 
         if (main_org[3][j] == EMPTY) main_org[3][j] = CEILLING;
     }
-    for (i = 0; i < MAIN_Y_SIZE; i++) {
-        for (j = 0; j < MAIN_X_SIZE; j++) {
+    for (i = 0; i < YSIZE; i++) {
+        for (j = 0; j < XSIZE; j++) {
             if (main_cpy[i][j] != main_org[i][j]) { // cpy랑 비교 후 게임판 수정
                 gotoxy(MAIN_X_ADJ + j, MAIN_Y_ADJ + i);
                 switch (main_org[i][j]) {
@@ -438,8 +438,8 @@ void draw_main() { // 게임판 그리는 함수
             }
         }
     }
-    for (i = 0; i < MAIN_Y_SIZE; i++) { // main_cpy에 저장
-        for (j = 0; j < MAIN_X_SIZE; j++) {
+    for (i = 0; i < YSIZE; i++) { // main_cpy에 저장
+        for (j = 0; j < XSIZE; j++) {
             main_cpy[i][j] = main_org[i][j];
         }
     }
@@ -448,13 +448,13 @@ void draw_main() { // 게임판 그리는 함수
 void new_block() { //새로운 블록 생성  
     int i, j;
 
-    bx = (MAIN_X_SIZE / 2) - 1; //블록 생성 위치x좌표(게임판의 가운데) 
+    bx = (XSIZE / 2) - 1; //블록 생성 위치x좌표(게임판의 가운데) 
     by = 0;  //블록 생성위치 y좌표(제일 위) 
     type = next_type; //다음블럭값을 가져옴 
     next_type = rand() % 7; //다음 블럭을 만듦 
     rotation = 0;  //회전은 0번으로 가져옴 
 
-    new_block_on = 0; //new_block flag를 끔  
+    new_block_type = 0; //new_block flag를 끔  
 
     for (i = 0; i < 4; i++) { //게임판 bx, by위치에 블럭생성  
         for (j = 0; j < 4; j++) {
@@ -510,7 +510,7 @@ void keep_block() { //블록 킵하기
             }
         }
 
-        bx = (MAIN_X_SIZE / 2) - 1; //블록 생성 위치x좌표(게임판의 가운데) 
+        bx = (XSIZE / 2) - 1; //블록 생성 위치x좌표(게임판의 가운데) 
         by = 0;  //블록 생성위치 y좌표(제일 위) 
         t = type;
         type = keep_type;
@@ -590,14 +590,14 @@ void drop_block() {
 
     if (crush_on && check_crush(bx, by + 1, rotation) == true) crush_on = 0; //밑이 비어있으면 crush flag 끔 
     if (crush_on && check_crush(bx, by + 1, rotation) == false) { //밑이 비어있지않고 crush flag가 켜저있으면 
-        for (i = 0; i < MAIN_Y_SIZE; i++) { //현재 조작중인 블럭을 굳힘 
-            for (j = 0; j < MAIN_X_SIZE; j++) {
+        for (i = 0; i < YSIZE; i++) { //현재 조작중인 블럭을 굳힘 
+            for (j = 0; j < XSIZE; j++) {
                 if (main_org[i][j] == ACTIVE_BLOCK) main_org[i][j] = INACTIVE_BLOCK;
             }
         }
         crush_on = 0; //flag를 끔 
         check_line(); //라인체크를 함 
-        new_block_on = 1; //새로운 블럭생성 flag를 켬    
+        new_block_type = 1; //새로운 블럭생성 flag를 켬    
         return; //함수 종료 
     }
     if (check_crush(bx, by + 1, rotation) == true) move_block(DOWN); //밑이 비어있으면 밑으로 한칸 이동 
@@ -699,15 +699,15 @@ void check_line() {
     int    block_amount; //한줄의 블록갯수를 저장하는 변수 
     int combo = 0; //콤보갯수 저장하는 변수 지정및 초기화 
 
-    for (i = MAIN_Y_SIZE - 2; i > 3;) { //i=MAIN_Y-2 : 밑쪽벽의 윗칸부터,  i>3 : 천장(3)아래까지 검사 
+    for (i = YSIZE - 2; i > 3;) { //i=MAIN_Y-2 : 밑쪽벽의 윗칸부터,  i>3 : 천장(3)아래까지 검사 
         block_amount = 0; //블록갯수 저장 변수 초기화 
-        for (j = 1; j < MAIN_X_SIZE - 1; j++) { //벽과 벽사이의 블록갯수를 셈 
+        for (j = 1; j < XSIZE - 1; j++) { //벽과 벽사이의 블록갯수를 셈 
             if (main_org[i][j] > 0) block_amount++;
         }
-        if (block_amount == MAIN_X_SIZE - 2) { //블록이 가득 찬 경우
+        if (block_amount == XSIZE - 2) { //블록이 가득 찬 경우
             cnt++; //지운 줄 갯수 카운트 증가 
             combo++; //콤보수 증가
-            for (l = 1; l < MAIN_X_SIZE - 1; l++) { //윗줄을 한칸씩 모두 내림(윗줄이 천장이 아닌 경우에만) 
+            for (l = 1; l < XSIZE - 1; l++) { //윗줄을 한칸씩 모두 내림(윗줄이 천장이 아닌 경우에만) 
                 for (k = i; k > 1; k--) {
                     if (main_org[k - 1][l] != CEILLING) main_org[k][l] = main_org[k - 1][l]; //한 칸 내려줌
                     if (main_org[k - 1][l] == CEILLING) main_org[k][l] = EMPTY; //천장 밑에 빈칸을 넣어줌
@@ -719,7 +719,7 @@ void check_line() {
     score += 100; //점수추가 
     if (combo) { //줄 삭제가 있는 경우 점수와 레벨 목표를 새로 표시함  
         if (combo > 1) { //2콤보이상인 경우 경우 보너스및 메세지를 게임판에 띄웠다가 지움 
-            gotoxy(MAIN_X_ADJ + (MAIN_X_SIZE / 2) - 1, MAIN_Y_ADJ + by - 1); printf("%d COMBO!", combo);
+            gotoxy(MAIN_X_ADJ + (XSIZE / 2) - 1, MAIN_Y_ADJ + by - 1); printf("%d COMBO!", combo);
             Sleep(500);
             score += (combo * 100);
             reset_main_cpy(); //텍스트를 지우기 위해 main_cpy을 초기화.
@@ -735,7 +735,7 @@ void check_game_over() {
     int x = 5;
     int y = 5;
 
-    for (i = 1; i < MAIN_X_SIZE - 2; i++) {
+    for (i = 1; i < XSIZE - 2; i++) {
         if (main_org[3][i] > 0) { //천장(위에서 세번째 줄)에 inactive가 생성되면 게임 오버 
             gotoxy(x, y + 0); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤"); //게임오버 메세지 
             gotoxy(x, y + 1); printf("▤                              ▤");
